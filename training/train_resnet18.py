@@ -18,6 +18,17 @@ unique_id = int(time.time())
 # Configure logging
 log_file = os.path.join(log_folder, f'train_resnet18_{unique_id}.log')
 logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def train_model_resnet18(epochs, max_lr, model, train_dl, valid_dl,grad_clip, weight_decay, opt_func):
+    history = m.fit_one_cycle(epochs, max_lr, model, train_dl, valid_dl,
+                                    grad_clip=grad_clip,
+                                    weight_decay=weight_decay,
+                                    opt_func=opt_func)
+
+    torch.save(model.state_dict(), "ResNET18_CIFAR10_ALL_CLASSES.pt")
+    model.load_state_dict(torch.load("ResNET18_CIFAR10_ALL_CLASSES.pt"))
+    return model, history
+
 if __name__ == '__main__':
     
     # run some code here
@@ -49,14 +60,7 @@ if __name__ == '__main__':
     opt_func = torch.optim.Adam
     try:
         logging.info("\n************************ Model Training Started******************\n\n")
-        history = m.fit_one_cycle(epochs, max_lr, model, train_dl, valid_dl,
-                                    grad_clip=grad_clip,
-                                    weight_decay=weight_decay,
-                                    opt_func=opt_func)
-
-        torch.save(model.state_dict(), "ResNET18_CIFAR10_ALL_CLASSES.pt")
-
-        model.load_state_dict(torch.load("ResNET18_CIFAR10_ALL_CLASSES.pt"))
+        model, history = train_model_resnet18(epochs=epochs, max_lr=max_lr, grad_clip=grad_clip, weight_decay=weight_decay, opt_func=opt_func, model=model, train_dl=train_dl, valid_dl=valid_dl)
         history = [m.evaluate(model, valid_dl)]
         logging.info(history)
         logging.info("\n********************* Model Training is Completed******************\n")
